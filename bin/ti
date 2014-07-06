@@ -13,6 +13,7 @@ Usage:
   ti (n|note) <note-text>...
   ti (l|log) [today]
   ti (e|edit)
+  ti (p|predict)
   ti -h | --help
 
 Options:
@@ -120,6 +121,25 @@ def action_tag(tags):
     tag_count = str(len(tags))
     print('Okay, tagged current work with ' + tag_count + ' tag' +
             ('s' if tag_count > 1 else '') + '.')
+
+
+def action_predict(duration):
+    #duration in minutes
+    data = store.load()
+    current = data["work"][-1]
+
+    if "predict" in current.keys():
+        p = current["predict"]
+    else:
+        p = []
+
+    p.append({
+        "timestamp": to_datetime(""),
+        "prediction": duration
+    })
+
+    current["predict"] = p
+    store.dump(data)
 
 
 def action_status():
@@ -342,6 +362,13 @@ def parse_args(argv=sys.argv):
 
         fn = action_note
         args = {'content': ' '.join(tail)}
+
+    elif head in ['p', 'predict']:
+        if not tail:
+            helpful_exit('Please provide an estimate of duraction')
+
+        fn = action_predict
+        args = {"duration": tail[0]}
 
     else:
         helpful_exit("I don't understand '" + head + "'")
